@@ -84,7 +84,7 @@
       display: grid;
       grid-template-columns: repeat(3, 90px);
       gap: 10px;
-      justify-content: center;
+      justify-content: start;
       margin-top: 15px;
     }
 
@@ -185,6 +185,62 @@
       margin-top: 0;
     }
 
+    .car-control-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .car-main-control {
+      width: 300px;
+    }
+
+    .car-interaction-panel {
+      margin-top: 15px;
+      min-height: 160px;
+      padding: 15px;
+      border-radius: 12px;
+      background: #f9fafc;
+      border: 1px dashed #90a4ae;
+    }
+
+    .car-interaction-panel h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .car-interaction-panel p {
+      margin: 8px 0 12px;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .car-option-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .car-option-buttons button {
+      min-width: 85px;
+      padding: 10px 12px;
+      font-size: 15px;
+    }
+
+    .car-option-note {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #eef7ee;
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
     @media (max-width: 800px) {
       .container {
         grid-template-columns: 1fr;
@@ -192,6 +248,14 @@
 
       .data-grid {
         grid-template-columns: 1fr;
+      }
+
+      .car-control-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .car-main-control {
+        width: 100%;
       }
     }
   </style>
@@ -280,18 +344,38 @@
     <div class="card">
       <h2>小车遥控</h2>
 
-      <div class="control-buttons">
-        <div></div>
-        <button onclick="sendCarCommand('forward')">前进</button>
-        <div></div>
+      <div class="car-control-layout">
+        <div class="car-main-control">
+          <div class="control-buttons">
+            <div></div>
+            <button onclick="sendCarCommand('forward')">前进</button>
+            <div></div>
 
-        <button onclick="sendCarCommand('left')">左转</button>
-        <button class="stop" onclick="sendCarCommand('stop')">停止</button>
-        <button onclick="sendCarCommand('right')">右转</button>
+            <button onclick="sendCarCommand('left')">左转</button>
+            <button class="stop" onclick="sendCarCommand('stop')">停止</button>
+            <button onclick="sendCarCommand('right')">右转</button>
 
-        <div></div>
-        <button onclick="sendCarCommand('backward')">后退</button>
-        <div></div>
+            <div></div>
+            <button onclick="sendCarCommand('backward')">后退</button>
+            <div></div>
+          </div>
+        </div>
+
+        <div class="car-interaction-panel">
+          <h3 id="carOptionTitle">交互控制</h3>
+          <p id="carOptionTip">点击前进、后退、左转或右转后，这里会显示对应的距离或角度选择。</p>
+
+          <div class="car-option-buttons" id="carOptionButtons">
+            <button onclick="sendCarCommand('forward')">选择前进</button>
+            <button onclick="sendCarCommand('backward')">选择后退</button>
+            <button onclick="sendCarCommand('left')">选择左转</button>
+            <button onclick="sendCarCommand('right')">选择右转</button>
+          </div>
+
+          <div class="car-option-note" id="carOptionNote">
+            当前模式：等待选择方向
+          </div>
+        </div>
       </div>
 
       <div class="speed-box">
@@ -353,6 +437,7 @@
     let currentSpeed = 60;
     let currentHeatMode = "off";
     let currentMassageMode = 0;
+    let currentCarAction = "stop";
 
     // 更新页面上的传感器数据
     function updateSensorDisplay() {
@@ -401,18 +486,71 @@
       }
     }
 
+    function getCarActionText(action) {
+      if (action === "forward") return "前进";
+      if (action === "backward") return "后退";
+      if (action === "left") return "左转";
+      if (action === "right") return "右转";
+      if (action === "stop") return "停止";
+      return "未知";
+    }
+
+    function updateCarInteraction(action) {
+      const title = document.getElementById("carOptionTitle");
+      const tip = document.getElementById("carOptionTip");
+      const buttons = document.getElementById("carOptionButtons");
+      const note = document.getElementById("carOptionNote");
+
+      if (action === "forward" || action === "backward") {
+        const text = getCarActionText(action);
+
+        title.innerText = text + "距离选择";
+        tip.innerText = "请选择小车" + text + "的距离。当前速度：" + currentSpeed + "%。";
+
+        buttons.innerHTML =
+          '<button onclick="sendCarDetailCommand(\'' + action + '\', \'10cm\')">' + text + " 10cm</button>" +
+          '<button onclick="sendCarDetailCommand(\'' + action + '\', \'20cm\')">' + text + " 20cm</button>" +
+          '<button onclick="sendCarDetailCommand(\'' + action + '\', \'30cm\')">' + text + " 30cm</button>";
+
+        note.innerText = "当前模式：" + text + "距离控制";
+        return;
+      }
+
+      if (action === "left" || action === "right") {
+        const text = getCarActionText(action);
+
+        title.innerText = text + "角度选择";
+        tip.innerText = "请选择小车" + text + "的旋转角度。当前速度：" + currentSpeed + "%。";
+
+        buttons.innerHTML =
+          '<button onclick="sendCarDetailCommand(\'' + action + '\', \'30°\')">' + text + " 30°</button>" +
+          '<button onclick="sendCarDetailCommand(\'' + action + '\', \'60°\')">' + text + " 60°</button>" +
+          '<button onclick="sendCarDetailCommand(\'' + action + '\', \'90°\')">' + text + " 90°</button>";
+
+        note.innerText = "当前模式：" + text + "角度控制";
+        return;
+      }
+
+      title.innerText = "交互控制";
+      tip.innerText = "小车已停止。点击前进、后退、左转或右转后，这里会显示对应的距离或角度选择。";
+      buttons.innerHTML =
+        '<button onclick="sendCarCommand(\'forward\')">选择前进</button>' +
+        '<button onclick="sendCarCommand(\'backward\')">选择后退</button>' +
+        '<button onclick="sendCarCommand(\'left\')">选择左转</button>' +
+        '<button onclick="sendCarCommand(\'right\')">选择右转</button>';
+      note.innerText = "当前模式：停止";
+    }
+
     // 小车控制
     function sendCarCommand(action) {
-      let text = "";
+      currentCarAction = action;
 
-      if (action === "forward") text = "前进";
-      if (action === "backward") text = "后退";
-      if (action === "left") text = "左转";
-      if (action === "right") text = "右转";
-      if (action === "stop") text = "停止";
+      let text = getCarActionText(action);
 
       document.getElementById("carStatus").innerText =
         "小车状态：" + text + "，速度：" + currentSpeed + "%";
+
+      updateCarInteraction(action);
 
       console.log("发送小车指令：", {
         cmd: "car",
@@ -421,10 +559,33 @@
       });
     }
 
+    function sendCarDetailCommand(action, value) {
+      const text = getCarActionText(action);
+
+      document.getElementById("carStatus").innerText =
+        "小车状态：" + text + "，参数：" + value + "，速度：" + currentSpeed + "%";
+
+      document.getElementById("carOptionNote").innerText =
+        "已选择：" + text + " " + value + "，速度：" + currentSpeed + "%";
+
+      console.log("发送小车详细指令：", {
+        cmd: "car",
+        action: action,
+        value: value,
+        speed: currentSpeed
+      });
+    }
+
     // 更新速度
     function updateSpeed() {
       currentSpeed = document.getElementById("speed").value;
       document.getElementById("speedValue").innerText = currentSpeed;
+
+      const text = getCarActionText(currentCarAction);
+      document.getElementById("carStatus").innerText =
+        "小车状态：" + text + "，速度：" + currentSpeed + "%";
+
+      updateCarInteraction(currentCarAction);
     }
 
     // 加热控制
@@ -515,6 +676,7 @@
     // 页面启动时先显示一次数据
     updateSensorDisplay();
     updateManualSensor();
+    updateCarInteraction("stop");
   </script>
 </body>
 </html>
