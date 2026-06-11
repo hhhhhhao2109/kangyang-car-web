@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能康养环境监测小车上位机</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #f4f7fb;
+      color: #222;
+    }
+
+    .header {
+      background: linear-gradient(90deg, #1e88e5, #26a69a);
+      color: white;
+      padding: 20px 30px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 8px 0 0;
+      font-size: 15px;
+      opacity: 0.9;
+    }
+
+    .container {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 21px;
+      border-left: 5px solid #1e88e5;
+      padding-left: 10px;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .data-box {
+      background: #f0f5ff;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .data-box .label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .data-box .value {
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 8px;
+      color: #1e88e5;
+    }
+
+    .control-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 90px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #1e88e5;
+      color: white;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #1565c0;
+    }
+
+    .stop {
+      background: #e53935;
+    }
+
+    .stop:hover {
+      background: #b71c1c;
+    }
+
+    .green {
+      background: #26a69a;
+    }
+
+    .green:hover {
+      background: #00796b;
+    }
+
+    .orange {
+      background: #fb8c00;
+    }
+
+    .orange:hover {
+      background: #ef6c00;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #eef7ee;
+      color: #2e7d32;
+      font-weight: bold;
+    }
+
+    .ai-box {
+      background: #f9fafc;
+      border-radius: 12px;
+      min-height: 120px;
+      padding: 15px;
+      line-height: 1.8;
+      border: 1px solid #e0e0e0;
+      white-space: pre-line;
+    }
+
+    .speed-box {
+      margin-top: 15px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .sensor-control-box {
+      margin-top: 18px;
+      padding: 15px;
+      border-radius: 12px;
+      background: #f9fafc;
+      border: 1px solid #e0e0e0;
+    }
+
+    .sensor-control-box h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .slider-row {
+      margin-top: 12px;
+    }
+
+    .slider-row p {
+      margin: 6px 0;
+      font-size: 15px;
+    }
+
+    .inner-section {
+      margin-top: 26px;
+    }
+
+    .inner-section h2 {
+      margin-top: 0;
+    }
+
+    @media (max-width: 800px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .data-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>智能康养环境监测小车上位机</h1>
+    <p>ESP32-C5 + 多传感器融合 + 云端大模型 + 热敷按摩康养模块</p>
+  </div>
+
+  <div class="container">
+
+    <!-- 环境数据区域 -->
+    <div class="card">
+      <h2>环境数据监测</h2>
+
+      <div class="data-grid">
+        <div class="data-box">
+          <div class="label">温度</div>
+          <div class="value" id="temperature">-- ℃</div>
+        </div>
+
+        <div class="data-box">
+          <div class="label">湿度</div>
+          <div class="value" id="humidity">-- %</div>
+        </div>
+
+        <div class="data-box">
+          <div class="label">空气质量</div>
+          <div class="value" id="airQuality">--</div>
+        </div>
+
+        <div class="data-box">
+          <div class="label">CO₂ 状态</div>
+          <div class="value" id="coStatus">--</div>
+        </div>
+
+        <div class="data-box">
+          <div class="label">PM2.5</div>
+          <div class="value" id="pm25">--</div>
+        </div>
+
+        <div class="data-box">
+          <div class="label">电池电量</div>
+          <div class="value" id="battery">-- %</div>
+        </div>
+      </div>
+
+      <div class="status" id="deviceStatus">
+        设备状态：手动模拟数据运行中
+      </div>
+
+      <!-- 环境数据手动调节区 -->
+      <div class="sensor-control-box">
+        <h3>环境数据手动调节</h3>
+
+        <div class="slider-row">
+          <p>温度：<span id="tempSliderValue">28.5</span> ℃</p>
+          <input type="range" id="tempSlider" min="0" max="50" value="28.5" step="0.1" oninput="updateManualSensor()" />
+        </div>
+
+        <div class="slider-row">
+          <p>湿度：<span id="humiditySliderValue">63</span> %</p>
+          <input type="range" id="humiditySlider" min="0" max="100" value="63" step="1" oninput="updateManualSensor()" />
+        </div>
+
+        <div class="slider-row">
+          <p>PM2.5：<span id="pm25SliderValue">35</span></p>
+          <input type="range" id="pm25Slider" min="0" max="200" value="35" step="1" oninput="updateManualSensor()" />
+        </div>
+
+        <div class="slider-row">
+          <p>CO₂ 浓度：<span id="co2SliderValue">600</span> ppm</p>
+          <input type="range" id="co2Slider" min="400" max="2000" value="600" step="10" oninput="updateManualSensor()" />
+        </div>
+
+        <div class="slider-row">
+          <p>电池电量：<span id="batterySliderValue">82</span> %</p>
+          <input type="range" id="batterySlider" min="0" max="100" value="82" step="1" oninput="updateManualSensor()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 小车控制区域：热敷按摩和云端分析都放到这里 -->
+    <div class="card">
+      <h2>小车遥控</h2>
+
+      <div class="control-buttons">
+        <div></div>
+        <button onclick="sendCarCommand('forward')">前进</button>
+        <div></div>
+
+        <button onclick="sendCarCommand('left')">左转</button>
+        <button class="stop" onclick="sendCarCommand('stop')">停止</button>
+        <button onclick="sendCarCommand('right')">右转</button>
+
+        <div></div>
+        <button onclick="sendCarCommand('backward')">后退</button>
+        <div></div>
+      </div>
+
+      <div class="speed-box">
+        <p>速度：<span id="speedValue">60</span>%</p>
+        <input type="range" id="speed" min="0" max="100" value="60" oninput="updateSpeed()" />
+      </div>
+
+      <div class="status" id="carStatus">
+        小车状态：停止
+      </div>
+
+      <!-- 热敷按摩控制区域 -->
+      <div class="inner-section">
+        <h2>热敷按摩控制</h2>
+
+        <p>加热模式</p>
+        <button class="green" onclick="setHeat('low')">低温 38℃</button>
+        <button class="green" onclick="setHeat('middle')">中温 42℃</button>
+        <button class="green" onclick="setHeat('high')">高温 45℃</button>
+        <button class="stop" onclick="setHeat('off')">关闭加热</button>
+
+        <p>按摩模式</p>
+        <button class="orange" onclick="setMassage(1)">轻柔按摩</button>
+        <button class="orange" onclick="setMassage(2)">标准按摩</button>
+        <button class="orange" onclick="setMassage(3)">强力按摩</button>
+        <button class="stop" onclick="setMassage(0)">关闭按摩</button>
+
+        <div class="status" id="therapyStatus">
+          康养状态：未开启
+        </div>
+      </div>
+
+      <!-- AI 分析区域 -->
+      <div class="inner-section">
+        <h2>云端大模型分析</h2>
+
+        <button onclick="analyzeByAI()">上传当前数据并生成康养建议</button>
+
+        <div class="ai-box" id="aiResult">
+          点击上方按钮后，系统会根据当前环境数据生成康养建议。
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 当前模拟数据
+    let sensorData = {
+      temperature: 28.5,
+      humidity: 63,
+      airQuality: "良好",
+      co2: 600,
+      coStatus: "正常",
+      pm25: 35,
+      battery: 82
+    };
+
+    let currentSpeed = 60;
+    let currentHeatMode = "off";
+    let currentMassageMode = 0;
+
+    // 更新页面上的传感器数据
+    function updateSensorDisplay() {
+      document.getElementById("temperature").innerText = sensorData.temperature.toFixed(1) + " ℃";
+      document.getElementById("humidity").innerText = sensorData.humidity + " %";
+      document.getElementById("airQuality").innerText = sensorData.airQuality;
+      document.getElementById("coStatus").innerText = sensorData.coStatus + " / " + sensorData.co2 + " ppm";
+      document.getElementById("pm25").innerText = sensorData.pm25;
+      document.getElementById("battery").innerText = Math.round(sensorData.battery) + "%";
+    }
+
+    // 手动调节环境数据
+    function updateManualSensor() {
+      sensorData.temperature = parseFloat(document.getElementById("tempSlider").value);
+      sensorData.humidity = parseInt(document.getElementById("humiditySlider").value);
+      sensorData.pm25 = parseInt(document.getElementById("pm25Slider").value);
+      sensorData.co2 = parseInt(document.getElementById("co2Slider").value);
+      sensorData.battery = parseInt(document.getElementById("batterySlider").value);
+
+      document.getElementById("tempSliderValue").innerText = sensorData.temperature.toFixed(1);
+      document.getElementById("humiditySliderValue").innerText = sensorData.humidity;
+      document.getElementById("pm25SliderValue").innerText = sensorData.pm25;
+      document.getElementById("co2SliderValue").innerText = sensorData.co2;
+      document.getElementById("batterySliderValue").innerText = sensorData.battery;
+
+      if (sensorData.pm25 < 35) {
+        sensorData.airQuality = "优";
+      } else if (sensorData.pm25 < 75) {
+        sensorData.airQuality = "良好";
+      } else {
+        sensorData.airQuality = "一般";
+      }
+
+      if (sensorData.co2 < 800) {
+        sensorData.coStatus = "正常";
+      } else if (sensorData.co2 < 1200) {
+        sensorData.coStatus = "偏高";
+      } else {
+        sensorData.coStatus = "较高";
+      }
+
+      updateSensorDisplay();
+      const aiResultBox = document.getElementById("aiResult");
+      if (aiResultBox) {
+        aiResultBox.innerText = '环境数据已更新，请点击"上传当前数据并生成康养建议"重新分析。';
+      }
+    }
+
+    // 小车控制
+    function sendCarCommand(action) {
+      let text = "";
+
+      if (action === "forward") text = "前进";
+      if (action === "backward") text = "后退";
+      if (action === "left") text = "左转";
+      if (action === "right") text = "右转";
+      if (action === "stop") text = "停止";
+
+      document.getElementById("carStatus").innerText =
+        "小车状态：" + text + "，速度：" + currentSpeed + "%";
+
+      console.log("发送小车指令：", {
+        cmd: "car",
+        action: action,
+        speed: currentSpeed
+      });
+    }
+
+    // 更新速度
+    function updateSpeed() {
+      currentSpeed = document.getElementById("speed").value;
+      document.getElementById("speedValue").innerText = currentSpeed;
+    }
+
+    // 加热控制
+    function setHeat(mode) {
+      currentHeatMode = mode;
+
+      let text = "";
+
+      if (mode === "low") text = "低温热敷 38℃";
+      if (mode === "middle") text = "中温热敷 42℃";
+      if (mode === "high") text = "高温热敷 45℃";
+      if (mode === "off") text = "加热已关闭";
+
+      document.getElementById("therapyStatus").innerText =
+        "康养状态：" + text;
+
+      console.log("发送加热指令：", {
+        cmd: "therapy",
+        heat_mode: mode
+      });
+    }
+
+    // 按摩控制
+    function setMassage(level) {
+      currentMassageMode = level;
+
+      let text = "";
+
+      if (level === 0) text = "按摩已关闭";
+      if (level === 1) text = "轻柔按摩";
+      if (level === 2) text = "标准按摩";
+      if (level === 3) text = "强力按摩";
+
+      document.getElementById("therapyStatus").innerText =
+        "康养状态：" + text;
+
+      console.log("发送按摩指令：", {
+        cmd: "therapy",
+        massage_level: level
+      });
+    }
+
+    // AI 分析
+    async function analyzeByAI() {
+      const aiResultBox = document.getElementById("aiResult");
+
+      aiResultBox.innerText = "正在上传当前环境数据，等待云端分析...";
+
+      const payload = {
+        temperature: sensorData.temperature,
+        humidity: sensorData.humidity,
+        air_quality: sensorData.airQuality,
+        co_status: sensorData.coStatus + " / " + sensorData.co2 + " ppm",
+        pm25: sensorData.pm25,
+        battery: Math.round(sensorData.battery),
+        heat_mode: currentHeatMode,
+        massage_mode: currentMassageMode,
+        scene: "户外康养环境监测"
+      };
+
+      try {
+        const response = await fetch("https://kangyang-car-project.onrender.com/api/analyze", {
+        method: "POST",
+        headers: {
+       "Content-Type": "application/json"
+       },
+      body: JSON.stringify(payload)
+    });
+
+        const result = await response.json();
+
+        aiResultBox.innerText =
+          "环境总结：" + result.summary + "\n\n" +
+          "康养建议：" + result.suggestion + "\n\n" +
+          "风险等级：" + result.risk_level + "\n" +
+          "推荐加热模式：" + result.recommend_heat + "\n" +
+          "推荐按摩档位：" + result.recommend_massage;
+
+        console.log("上传给 AI 的数据：", payload);
+        console.log("AI 返回结果：", result);
+
+      } catch (error) {
+        aiResultBox.innerText = "AI分析失败，请检查后端服务器是否启动。";
+        console.error("AI请求错误：", error);
+      }
+    }
+
+    // 页面启动时先显示一次数据
+    updateSensorDisplay();
+    updateManualSensor();
+  </script>
+</body>
+</html>
